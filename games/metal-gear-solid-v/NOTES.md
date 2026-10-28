@@ -72,9 +72,81 @@ Repo cloned at the current `main` tip. No MGSV issue or PR checked on the hub ye
   fine for reviving, not for selling.
 - Ground Zeroes: any co-op attempt (not searched in depth).
 
+### 2026-10-28 Phase 1b: Dynamite deep-dive (its docs + 55 open issues)
+
+Read `docs/MAKING_OF.md` (a long build diary) and `webui/docs/docs.md` (user docs), and listed the
+open issues via the GitHub API. No install, no code. This resolves the networking/version/what-syncs
+unknowns above.
+
+#### Observed (from the author's own docs)
+
+- **Origin:** author (unknown321) built a MGSV master-server reimplementation (`fuse`, Go+SQLite) to
+  connect two players on a FOB map, then swapped the map/mission to single-player ones -> dynamite.
+  First two-player contact 2025-04-07.
+- **Why it is possible:** a Fox Engine session is natively multiplayer (up to 16). Single-player
+  missions run a 1-player session; FOB missions run the same session but let a second player join.
+- **Connection:** Steam P2P session, host accepts incoming connections, client supplies the host's
+  **SteamID** (via UI target or hardcoded). A Steam-network connection is required to broker it; after
+  connecting, the client knows the host's IP (so there is a griefing surface -> black/whitelists in
+  `dynamite.log.txt`). Client must press Master+UP (`Dynamite.CreateClientSession`) after the host
+  loads, every time.
+- **Two player instances:** single-player missions allocate one player; a `.fox2` definition edit adds
+  the second instance so both render.
+- **Host authority:** enemies are hardcoded to attack player 0 (host) and ignore the joiner
+  ("defender"). Enemy AI is host-controlled; movement commands are sent to the client. Dynamite patches
+  targeting to "nearest player entity."
+- **Native layer:** started as pure Go exe byte-patching (no DLL) for portability; targeting logic
+  forced a move to C++ via an **IHHook**-based `dinput8.dll` proxy (IHHook is part of Infinite Heaven,
+  but dynamite is NOT IH-based and rejected building on IH for readability/compat reasons).
+- **Markers:** first hacked over an `AddLocalDamage` packet (6 floats), later replaced by the game's
+  in-game network messaging. Only ~11 of the game's entity sync instances are implemented.
+- **Save safety:** save location is defined in Lua, so dynamite backs up + copies the save and runs on
+  the copy (tool `squib`); single-player data is untouched, online funds/resources stubbed.
+- **Packaging:** single cross-platform Go binary; own repack tool `datfpk` (rejected SnakeBite/Makebite
+  and GzsTool as unworkable on Linux / for rapid iteration); config is an `.ini` edited through a local
+  web UI; local `fuse` on port 6667 avoids sending co-op records to Konami (ban risk).
+- **Platforms:** Windows 10+ and Linux/SteamOS (Proton needs `WINEDLLOVERRIDES="dinput8.dll=n,b"`).
+- **Version:** latest release v0.6.0 (2025-10-31); master pushed to 2026-09-29. Issue #136: the
+  2026-06-09 Steam update breaks launch, hence the mandatory rollback (exact pre-patch build id not
+  stated).
+
+#### What it really syncs (observed)
+
+| Area | State |
+|---|---|
+| Players visible | Buggy. Partner avatar often renders only in FOB mode, not regular missions (#109, #59). |
+| Enemies | Partial. Vitals synced; positions and FOV NOT synced (#112, #113); AI host-driven. |
+| Story/objectives | Partial. Secondary objectives + objective markers not shared (#115, #117); some update host-only (#118). |
+| World state | Partial. Weather host-only; gimmicks/physics desynced; outpost capture not announced to client (#98). |
+| Items/loadout | Per-player and partial. Loadout drop invisible to partner; ammo drop can be the wrong player's; weapon pickup "not allowed" (#87, #45). |
+| Vehicles | Broken. One instance only, position desync, driver frozen; tank-as-host can crash (#128, #35, #42, #47). |
+| Buddies | Quiet/D-Dog local (unseen by partner); D-Horse teleport desync (#43, #90, #122). |
+| Markers (user + enemy) | Working (custom sync). |
+
+#### Bug clusters (from the 55 open issues)
+
+- **Connection/installer:** #136 (2026-06-09 patch breaks launch), #129/#127 connect fails, #92/#76/#102 installer, #85 (new save can't connect until missions 1&2 unlocked).
+- **Enemy sync:** #112 positions, #113 FOV, #36 revenge, #55 skulls.
+- **Player sync:** #109/#59 invisible partner, #29/#31 animations, #87 weapon-not-allowed, #94 cargo fulton.
+- **Objectives:** #115 markers, #117 secondary objectives, #118/#95/#83 per-mission.
+- **Vehicles/Walker Gear:** #128/#35/#42/#47/#19, #130/#116/#21.
+- **Per-mission crashes:** #3 (#13 Pitch Dark), #16 (#43), #103 (#30), #15 (#28), #124 (#10).
+- **Enhancements/roadmap:** #58 free roam, #123 invite-based join, #4 FOB items; `>2 players` (author's stated priority, currently fails to start).
+
+#### Resolved from the earlier "Unknown" list
+
+- Networking model: **confirmed** (Steam P2P by SteamID + local fuse master server; host-authoritative).
+- What it syncs: **mapped** (table above).
+- Builds on Infinite Heaven? **No** — uses IHHook only.
+- Supported version: rollback target is the build **before the 2026-06-09 Steam patch** (exact id still unknown).
+- Still open: exact pre-patch build number; whether unreleased master fixes change any of the above.
+
 ## Sources
 
 - https://github.com/unknown321/dynamite
+- https://github.com/unknown321/dynamite/blob/master/docs/MAKING_OF.md
+- https://github.com/unknown321/dynamite/blob/master/webui/docs/docs.md
+- https://github.com/unknown321/dynamite/issues
 - https://www.pcgamer.com/games/action/after-10-years-theres-a-functioning-metal-gear-solid-5-co-op-mod-so-you-and-a-friend-can-be-played-like-a-damn-fiddle-together/
 - https://github.com/Hound-Protocol/Joint-Operations
 - https://github.com/alex-ppg/mgs-v-multiplayer-mod

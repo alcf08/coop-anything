@@ -8895,28 +8895,36 @@
   engine: Fox Engine
   project: dynamite
   url: https://github.com/unknown321/dynamite
-  other_urls: []
+  other_urls:
+  - https://github.com/unknown321/fuse
   kind: mod
   status: alpha
   coop_scope:
-    players_visible: 'yes'
+    players_visible: partial
     story: partial
-    enemies: 'yes'
-    world_state: unknown
-    items: unknown
+    enemies: partial
+    world_state: partial
+    items: per-player
   players: '2'
-  networking: unknown
+  networking: steam-relay
   open_source: 'yes'
   last_activity: 2026-09
   qa: community-reports
-  notes: The one MGSV co-op mod people report actually playing. 2-player, early development stage
-    per the author, with full mission playthroughs on video (missions 5 and 15); PC Gamer describes
-    it as a functioning co-op mod. Needs an unmodified Steam copy (JP not supported) and a game-version
-    rollback before install (see issue 136). Ships a masterserver and a hook component; exact networking
-    transport not confirmed. License is GPL-3.0 with the Commons Clause (derivatives fine, selling not).
-    476 stars, 55 open issues when checked. Write-up and research in games/metal-gear-solid-v.
+  notes: The one MGSV co-op mod people report actually playing; 2-player, early-development, Windows
+    and Linux/SteamOS. Built on the game's own FOB online path, so a Steam P2P session connects host
+    and client by SteamID (Steam network required). Host-authoritative; player 0 is the host and enemy
+    AI and targeting are driven by the host. Bundles a local master server (fuse) on port 6667 so co-op
+    records are not sent to Konami's server, and copies your save so single-player data stays safe.
+    Uses an IHHook base for native patches but is not Infinite-Heaven-based and conflicts with mods
+    touching the same files. Latest release v0.6.0 (2025-10-31), master ahead to 2026-09. Must roll the
+    game back past the 2026-06-09 Steam patch, which breaks launch (issue 136). Mission-based from a
+    curated list, no free roam yet, and more than 2 players fails to start. Partial sync; enemy
+    positions/FOV, objectives, markers, vehicles, buddies and animations have known desyncs across 55
+    open issues. GPL-3.0 with the Commons Clause. Write-up and research in games/metal-gear-solid-v.
   sources:
   - https://github.com/unknown321/dynamite
+  - https://github.com/unknown321/dynamite/blob/master/docs/MAKING_OF.md
+  - https://github.com/unknown321/dynamite/blob/master/webui/docs/docs.md
   - https://www.pcgamer.com/games/action/after-10-years-theres-a-functioning-metal-gear-solid-5-co-op-mod-so-you-and-a-friend-can-be-played-like-a-damn-fiddle-together/
   checked: '2026-10-28'
 - game: 'Metal Gear Solid V: The Phantom Pain'

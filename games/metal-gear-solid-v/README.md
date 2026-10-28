@@ -21,13 +21,16 @@ research only this pass — nothing here was installed, reverse-engineered, or t
 ## Existing work
 
 - **[Dynamite](https://github.com/unknown321/dynamite)** by unknown321 — 2-player co-op, "early
-  development stage." 476 stars, 55 open issues; last push 2026-09-29 (created 2025-07-20); v0.6.0
-  gameplay video dated 2025-10-31. Requires an unmodified Steam copy (JP unsupported), an online
-  connection, free space, and a friend; you **must roll the game back to the previous version**
-  before installing (issue [#136](https://github.com/unknown321/dynamite/issues/136)). Ships a
-  `masterserver/` and a `hook/` component. License: **GPL-3.0 with the Commons Clause** (derivatives
-  fine, selling not). Docs: `docs/MAKING_OF.md` and `webui/docs/docs.md` (shipped with the build).
-  This is the one build players and press report actually playing.
+  development stage." 476 stars, 55 open issues; latest release v0.6.0 (2025-10-31), master ahead to
+  2026-09-29 (created 2025-07-20). Windows 10+ and Linux/SteamOS (Proton via a `dinput8.dll` override).
+  Requires an unmodified Steam copy (JP unsupported), a Steam connection, ~1 GB free, and a friend; a
+  100% save is recommended to reach all working missions. You **must roll the game back past the
+  2026-06-09 Steam patch**, which breaks launch (issue
+  [#136](https://github.com/unknown321/dynamite/issues/136)). License: **GPL-3.0 with the Commons
+  Clause**. Single Go binary; bundles its own master server ([fuse](https://github.com/unknown321/fuse))
+  and save-safety tool ([squib](https://github.com/unknown321/squib)). Docs: `docs/MAKING_OF.md` (a
+  detailed build diary) and `webui/docs/docs.md`. This is the one build players and press report
+  actually playing. See NOTES.md for the full architecture + bug breakdown.
 - **[Joint Operations](https://github.com/Hound-Protocol/Joint-Operations)** by Hound Protocol —
   aims for up to 16 players (1 host + 15 clients) in the open world, Windows + Linux/Proton, using
   the game's own online functionality and the Steamworks SDK. As of 2026-10-25 it is organization,
@@ -52,12 +55,21 @@ research only this pass — nothing here was installed, reverse-engineered, or t
   1.0.15.4), and [IHHook](https://mgsvmoddingwiki.github.io/IHHook) (a `dinput8.dll` proxy DLL that
   adds a Lua C API to the statically-compiled game Lua). [MockFox](https://github.com/TinManTex/MockFox)
   can run the game's Lua and IH scripts outside the game for offline analysis.
-- **Netcode:** the shipped game has no co-op campaign netcode. FOB is asynchronous PvP; Metal Gear
-  Online is a separate mode. So co-op means running single-player logic on a sync layer added by the
-  mod (host authority with state/entity sync is the likely model). Dynamite's exact transport is not
-  yet confirmed from its public docs.
-- **Save/progression, world state, Mother Base:** how these are owned and synced in co-op is
-  **unknown** to us — not yet read from Dynamite's docs or verified.
+- **Netcode (how Dynamite actually does it, from its `MAKING_OF.md`):** the shipped game has no co-op
+  *campaign* netcode, but a Fox Engine session is natively multiplayer (up to 16 players); single-player
+  missions just run a 1-player session, and **FOB** missions run the same session with a second player
+  allowed to join. Dynamite hijacks the FOB "start mission" connection path: a **Steam P2P** session
+  connects host and client **by SteamID** (a Steam-network connection is required to establish it), then
+  the mission id/geometry is swapped to a single-player mission and a second player instance is allocated
+  via a `.fox2` edit. It is **host-authoritative** — player 0 is the host; enemy AI and targeting are
+  driven by the host (targeting patched to "nearest player," since FOB enemies normally ignore the
+  joiner/"defender"). Markers are synced through an in-game network-message channel (originally a
+  damage-packet hack). Native patches are done with an **IHHook**-based `dinput8.dll` proxy plus direct
+  exe byte-patching in Go; it does **not** build on Infinite Heaven.
+- **Master server:** co-op records would otherwise go to Konami's master server and risk an online ban,
+  so Dynamite bundles **fuse** (a Go/SQLite re-implementation) running locally on port 6667.
+- **Save safety:** Dynamite copies your save and runs co-op on the copy (tool: **squib**); your
+  single-player data is left untouched, and online funds/resources are stubbed, not transferred.
 
 ## What we changed
 
@@ -77,18 +89,37 @@ machine; coop-anything does not distribute the game or the mod.
 
 ## Known issues
 
-- Dynamite is early/buggy by its author's own description ("expect bugs"); 55 open issues.
-- 2 players only. No working option for 3+.
-- Requires a game-version rollback, which can be undone by Steam updating the game.
-- Japanese Steam version unsupported.
+What a player will actually notice in Dynamite (categorised from its 55 open issues + `MAKING_OF.md`):
+
+- **Scope:** 2 players only (3+ fails to start); mission-based from a curated list, **no free roam**;
+  various missions are unplayable or crash-prone.
+- **Players:** your partner's avatar often only renders in FOB mode, not in regular missions (so they
+  can look invisible); missing animations when carrying bodies or hiding in toilets.
+- **Enemies:** positions and field-of-view are not synced between the two PCs (vitals are); each side
+  runs its own AI, so a soldier can be in different places for each player.
+- **Objectives/markers:** secondary objectives and objective markers are not shared; some objectives
+  update for the host only.
+- **Vehicles:** tanks/cars have spawn and position-sync bugs (host picking a tank can crash the game);
+  Walker Gear is invisible to the other player.
+- **Buddies:** Quiet/D-Dog are local (not seen by the partner); D-Horse causes teleport desync.
+- **Flow:** death → respawn after ~10 s (no mission-fail); restarting from the pause menu hangs on an
+  infinite loading screen; fultoning another player fails the mission.
+- **Setup:** requires a game-version rollback (undone whenever Steam updates the game); JP version
+  unsupported; co-op won't connect during Steam weekly maintenance.
 
 ## Next steps
 
-- Read Dynamite's `webui/docs/docs.md` and `docs/MAKING_OF.md` to pin down: supported build number,
-  networking model, and exactly what is synced (world state, Mother Base, items, progression).
-- Mine Dynamite's GitHub issues into a bug list (turn crash reports into repro steps), with the
-  owner's OK before any test install.
-- Confirm whether Dynamite builds on Infinite Heaven or hooks independently.
-- Keep an eye on Joint Operations' 0.1 (2-player) build and update the directory when it ships.
-- If reviving/extending Dynamite: follow `playbook/reviving-abandoned-mods.md` and set up isolated
-  test installs + bot-driven QA (`playbook/automated-qa.md`) rather than relying on a human playtest.
+Networking, supported version, and what-syncs are now mapped (see above and NOTES.md). Remaining:
+
+- **Highest-value fixes by the author's own priority:** `>2 player` support (session fails to start)
+  and **enemy position/FOV sync** (#112, #113) — the two that most change the "is this really co-op"
+  feeling. The marker channel already shows a working custom-sync path to copy.
+- Build from source (`docs/BUILD.md`, Go) and set up **isolated test installs + bot-driven QA**
+  (`playbook/automated-qa.md`, `tools/`) so fixes are verified without a human playtest.
+- Diff vanilla vs. Dynamite scripts with the author's own method (unpack game, StyLua-format, `meld`)
+  to see exactly where each patch lives before changing it.
+- Confirm the exact pre-2026-06-09 build number to roll back to (issue #136 only gives the date).
+- Watch Joint Operations' 0.1 (2-player) build and update the directory when it ships.
+
+Author context: unknown321 shipped semi-working and has cut back time (funding/job hunting); the mod is
+a strong base but not under heavy active development. A reviver should coordinate via its GitHub issues.
