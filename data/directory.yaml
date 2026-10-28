@@ -8890,3 +8890,85 @@
   sources:
   - https://github.com/vaiserYT/DeadCellsMultiplayerMod
   checked: '2026-10-23'
+- game: 'Metal Gear Solid V: The Phantom Pain'
+  year: 2015
+  engine: Fox Engine
+  project: dynamite
+  url: https://github.com/unknown321/dynamite
+  other_urls: []
+  kind: mod
+  status: alpha
+  coop_scope:
+    players_visible: 'yes'
+    story: partial
+    enemies: 'yes'
+    world_state: unknown
+    items: unknown
+  players: '2'
+  networking: unknown
+  open_source: 'yes'
+  last_activity: 2026-09
+  qa: community-reports
+  notes: The one MGSV co-op mod people report actually playing. 2-player, early development stage
+    per the author, with full mission playthroughs on video (missions 5 and 15); PC Gamer describes
+    it as a functioning co-op mod. Needs an unmodified Steam copy (JP not supported) and a game-version
+    rollback before install (see issue 136). Ships a masterserver and a hook component; exact networking
+    transport not confirmed. License is GPL-3.0 with the Commons Clause (derivatives fine, selling not).
+    476 stars, 55 open issues when checked. Write-up and research in games/metal-gear-solid-v.
+  sources:
+  - https://github.com/unknown321/dynamite
+  - https://www.pcgamer.com/games/action/after-10-years-theres-a-functioning-metal-gear-solid-5-co-op-mod-so-you-and-a-friend-can-be-played-like-a-damn-fiddle-together/
+  checked: '2026-10-28'
+- game: 'Metal Gear Solid V: The Phantom Pain'
+  year: 2015
+  engine: Fox Engine
+  project: Joint Operations
+  url: https://github.com/Hound-Protocol/Joint-Operations
+  other_urls:
+  - https://hound-protocol.github.io/joint-operations-web/
+  - https://discord.gg/QTpJ89kMCM
+  kind: mod
+  status: prototype
+  coop_scope:
+    players_visible: unknown
+    story: unknown
+    enemies: unknown
+    world_state: unknown
+    items: unknown
+  players: up to 16 (planned)
+  networking: unknown
+  open_source: 'yes'
+  last_activity: 2026-10
+  qa: none
+  notes: Aims for up to 16 players (1 host + 15 clients) in the open world, Windows and Linux/Proton,
+    using the game's own online functionality and the Steamworks SDK. As of 2026-10-25 the README
+    states "Nothing is playable yet" - organization, docs, website and desk research are in place and
+    the first 2-player build (0.1) is planned. GPL-3.0-only (docs CC BY-SA 4.0); clean-room IP policy.
+    Created 2026-10-21. Write-up in games/metal-gear-solid-v.
+  sources:
+  - https://github.com/Hound-Protocol/Joint-Operations
+  checked: '2026-10-28'
+- game: 'Metal Gear Solid V: The Phantom Pain'
+  year: 2015
+  engine: Fox Engine
+  project: mgs-v-multiplayer-mod
+  url: https://github.com/alex-ppg/mgs-v-multiplayer-mod
+  other_urls: []
+  kind: mod
+  status: prototype
+  coop_scope:
+    players_visible: unknown
+    story: unknown
+    enemies: unknown
+    world_state: unknown
+    items: unknown
+  players: unknown
+  networking: unknown
+  open_source: 'yes'
+  last_activity: 2026-10
+  qa: none
+  notes: Placeholder repo created 2026-10-25 with a one-line README; co-op named as the first target,
+    no code yet. CC0-1.0. Listed so the next agent can watch it. Write-up in games/metal-gear-solid-v.
+  sources:
+  - https://github.com/alex-ppg/mgs-v-multiplayer-mod
+  checked: '2026-10-28'
